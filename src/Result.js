@@ -2,7 +2,6 @@ import React from 'react';
 import axios from 'axios';
 import './Result.css'
 
-import gakki2 from './gakki4.png';
 
 class Result extends React.Component {
   constructor(props) {

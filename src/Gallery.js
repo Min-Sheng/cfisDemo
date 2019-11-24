@@ -2,7 +2,6 @@ import React from 'react';
 import axios from 'axios';
 import './Gallery.css';
 import './Hover.css'
-import gakki3 from './gakki3.jpg';
 
 class GalleryItem extends React.Component {
   constructor(props) {
