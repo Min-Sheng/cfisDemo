@@ -12,7 +12,8 @@ class ProfileFeeder extends React.Component  {
     super(props);
      this.state = { 
       selectedFile: null,
-      isLive: false
+      isLive: false,
+      snapshot: null,
       // picture: profile_template, 
                   };
     //  this.onDrop = this.onDrop.bind(this);
@@ -114,12 +115,16 @@ class ProfileFeeder extends React.Component  {
       onTakePhoto = { (dataUri) => { this.handleTakePhoto(dataUri); } }
       imageType = {IMAGE_TYPES.JPG}
       />
+      {this.state.snapshot == null ? "": <img className="upload-preview" src={this.state.snapshot}/>}
     </div>
   };
   handleTakePhoto (dataUri) {
     // Do stuff with the photo...
     console.log('takePhoto');
     console.log(dataUri);
+    this.setState({
+      snapshot: dataUri
+    })
     let profileFile = dataURItoBlob(dataUri);
     let filename = "livedemo_" + getFormattedTime() + '.'+profileFile.type.split('/')[1];
     let formdata = new FormData();
