@@ -83,7 +83,7 @@ app.get('/comparison',function(req, res) {
   lineReader.on('line', function (line) {
     lineCounter++;
     wantedLines.push(line);
-    if(lineCounter==1){lineReader.close();}
+    if(lineCounter === 1){lineReader.close();}
   });
   lineReader.on('close', function() {
     console.log(wantedLines);

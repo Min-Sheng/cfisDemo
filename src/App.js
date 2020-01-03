@@ -4,7 +4,8 @@ import logo from './logo.svg';
 import NavBar from './NavBar';
 import ProfileFeeder from './ProfileFeeder';
 import Gallery from './Gallery';
-import Result from './Result'
+import Result from './Result';
+import RankedResult from './RankedResult';
 import './App.css';
 import './ProfileFeeder.css'
 
@@ -42,18 +43,21 @@ class App extends React.Component  {
                 <ProfileFeeder setUploadedToCompare={this.setUploadedToCompare}/>
               </div>
               <div className="col-sm-10">
-                <h3 class="font-weight-light text-center text-lg-left mt-4 mb-0">Results</h3>
-                <hr class="mt-1 mb-1"/>
-                <Result galleryFilename={this.state.galleryFilename} uploadedFilename={this.state.uploadedFilename}/>
+                {/* <div className="row"> */}
+                  <h3 class="font-weight-light text-center text-lg-left mt-4 mb-0">Results</h3>
+                  <hr class="mt-1 mb-1"/>
+                  <RankedResult uploadedFilename={this.state.uploadedFilename}/>
+                {/* </div> */}
+                {/* <div className="row"> */}
+                  <div className="col-sm-12">
+                    <h3 class="font-weight-light text-center text-lg-left mt-4 mb-0">Gallery</h3>
+                    <hr class="mt-1 mb-1"/>
+                    <Gallery setGalleryToCompare={this.setGalleryToCompare}/>
+                  </div>
+                {/* </div> */}
               </div>
             </div>
-            <div className="row">
-              <div className="col-sm-12">
-                <h3 class="font-weight-light text-center text-lg-left mt-4 mb-0">Gallery</h3>
-                <hr class="mt-1 mb-1"/>
-                <Gallery setGalleryToCompare={this.setGalleryToCompare}/>
-              </div>
-            </div>
+            
           </div>
   
           {/* <img src={logo} className="App-logo" alt="logo" />

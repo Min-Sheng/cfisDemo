@@ -1,3 +1,30 @@
 .upload-preview{
     width: 10rem;
 }
+.react-html5-camera-photo>video{
+    width: 10rem;
+}
+.react-html5-camera-photo>img{
+    width: 10rem;
+}
+#container-circles {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+}
+#inner-circle {
+    left: 50%;
+    top: 38px;
+    height: 44px;
+    width: 44px;
+    background: rgb(255, 0, 0);
+    margin: -22px 0 0 -22px;
+    z-index: 2;
+}
+#outer-circle {
+    left: -37px;
+    height: 75px;
+    width: 75px;
+    background-color: rgba(255, 125, 125, 0.4);
+    z-index: 1;
+}

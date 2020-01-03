@@ -44,7 +44,7 @@ class Result extends React.Component {
     })
     .finally(() => {
       // always executed
-      this.regitsterProgress((this.state.comparisonScore > 0.24 ? "The same person!" : "Not the same person!") + 
+      this.regitsterProgress((this.state.comparisonScore > 0.24 ? "The same person!" : "Not similar!") + 
       ", xCos score: " + this.state.comparisonScore)
     }); 
   }
@@ -87,7 +87,7 @@ class Result extends React.Component {
         </div>
         <div className="row mt-3">
           <div className="col">
-            <p>Comparing {displayedUploadedFilename} and {displayedGalleryFilename}</p>
+            <p className="h6">Comparing {displayedUploadedFilename} and {displayedGalleryFilename}</p>
             {compareBtn}
             {progressText}
           </div>
