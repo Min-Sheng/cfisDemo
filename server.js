@@ -4,6 +4,9 @@ var multer = require('multer')
 var cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
+
+
 const { execSync } = require('child_process');
 var databaseDir = path.join(__dirname,'public/');
 // fs.readdir(databaseDir, function (err, files) {
@@ -68,30 +71,45 @@ app.get('/comparison',function(req, res) {
 
   console.log(uploadedFilename);
   console.log(galleryFilename);
+  axios.get('http://localhost:5901', {
+    params: {
+      uploadedFilename: uploadedFilename,
+      galleryFilename: galleryFilename,
+      result_file: result_file
+    }
+  })
+  .then(response => {
+    result_file_base64_string = response.data.result_base64
+    
+    // Get the score text
+    var score_file = result_file.replace(/\.[^/.]+$/, "") + ".txt"
+    score_file = path.join(databaseDir, "results", score_file);
+    var lineReader = require('readline').createInterface({
+      input: require('fs').createReadStream(score_file),
+    });
+    var lineCounter = 0; var wantedLines = [];
+    lineReader.on('line', function (line) {
+      lineCounter++;
+      wantedLines.push(line);
+      if(lineCounter === 1){lineReader.close();}
+    });
+    lineReader.on('close', function() {
+      console.log(wantedLines);
+      // process.exit(0);
+      var score = wantedLines[0];
+      res.send([result_file, score, result_file_base64_string]);
+    });
   
+  })
+  .catch(error => {
+    console.log(error);
+    console.log('LLLLLLLLLLLLLLLLLLLLLL');
+  });
   // stderr is sent to stderr of parent process
   // you can set options.stdio if you want it to go elsewhere
   
-  let stdout = execSync("bash compare.sh " + uploadedFilename + " " + galleryFilename + " " + result_file, {stdio: 'inherit'} )
-  
-  var score_file = result_file.replace(/\.[^/.]+$/, "") + ".txt"
-  score_file = path.join(databaseDir, "results", score_file);
-  var lineReader = require('readline').createInterface({
-    input: require('fs').createReadStream(score_file),
-  });
-  var lineCounter = 0; var wantedLines = [];
-  lineReader.on('line', function (line) {
-    lineCounter++;
-    wantedLines.push(line);
-    if(lineCounter === 1){lineReader.close();}
-  });
-  lineReader.on('close', function() {
-    console.log(wantedLines);
-    // process.exit(0);
-    var score = wantedLines[0];
-    res.send([result_file, score]);
-  });
-  
+  // let stdout = execSync("bash compare.sh " + uploadedFilename + " " + galleryFilename + " " + result_file, {stdio: 'inherit'} )
+ 
 });
 
 app.listen(8000, function() {

@@ -25,3 +25,5 @@ yarn-error.log*
 /public/database
 /public/results
 /public/uploaded_imgs
+
+/public/database_backup

@@ -54,20 +54,21 @@ class RankedResult extends React.Component {
       // this.regitsterProgress("Initializing comparison process")
       // console.log(this.state.gallery.sort().slice(4, 11))
       // this.state.gallery.sort().slice(4, 11).map((item) => {
-      this.state.gallery.sort().slice(4, 16).map((item) => {
+      this.state.gallery.map((item) => {
         this.execComparison(uploadedFilename, item.filename);
       })
       
     }
   }
-  registerResultPic = (comparisonResultPic, comparisonScore) =>{
+  registerResultPic = (comparisonResultPic, comparisonScore, comparisonImgBase64) =>{
     console.log("In registerResultPic")
     this.setState({
       comparisonResultList:[
         ...this.state.comparisonResultList,
         {
           pic: comparisonResultPic,
-          score: comparisonScore
+          score: comparisonScore,
+          pic_base64: comparisonImgBase64
         }
       ]
     })
@@ -84,7 +85,8 @@ class RankedResult extends React.Component {
       console.log(response);
       let comparisonResultPic = response.data[0];
       let comparisonScore =  response.data[1];
-      this.registerResultPic(comparisonResultPic, comparisonScore);
+      let comparisonImgBase64 =  response.data[2];
+      this.registerResultPic(comparisonResultPic, comparisonScore, comparisonImgBase64);
       return comparisonScore
       
     })
@@ -129,7 +131,8 @@ class RankedResult extends React.Component {
   getResultComponent = (item) => {
     return(
     <div>
-      <img src={"/results/" + item.pic} className="App-logo img-fluid" alt="no result yet" />
+      {/* <img src={"/results/" + item.pic} className="App-logo img-fluid" alt="no result yet" /> */}
+      <img src={`data:image/jpg;base64,${item.pic_base64}`} className="App-logo img-fluid" alt="no result yet" />
       <p>{(item.score> 0.24 ? "The same person!" : "Not similar!") + ", xCos score: " + item.score}</p>
     </div>)
   }
@@ -144,6 +147,13 @@ class RankedResult extends React.Component {
   var pictures = this.state.comparisonResultList.map((item)=>this.getResultComponent(item));
     return (
       <div>
+        <div className="row mt-3">
+          <div className="col">
+            <p className="h6">Comparing {displayedUploadedFilename} and {displayedGalleryFilenames}</p>
+            {compareBtn}
+            {progressText}
+          </div>
+        </div>
         <div className="row">
           <div className="col">
             {/* <img src={"http://localhost:8000/results/" + this.state.comparisonResult} className="App-logo img-fluid" alt="no result yet" /> */}
@@ -152,17 +162,6 @@ class RankedResult extends React.Component {
           </div>
          
         </div>
-        <div className="row mt-3">
-          <div className="col">
-            <p className="h6">Comparing {displayedUploadedFilename} and {displayedGalleryFilenames}</p>
-            {compareBtn}
-            {progressText}
-          </div>
-        </div>
-          
-          
-          
-          
       </div>
     );
   }
