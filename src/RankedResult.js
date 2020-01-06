@@ -14,10 +14,12 @@ class RankedResult extends React.Component {
         gallery: []
       }; 
       this.onClickHandler = this.onClickHandler.bind(this);
+      this.onClickHandlerFast = this.onClickHandlerFast.bind(this);
       this.regitsterProgress = this.regitsterProgress.bind(this);
       this.registerResultPic = this.registerResultPic.bind(this);
       this.cleanProgress = this.cleanProgress.bind(this);
       this.execComparison = this.execComparison.bind(this);
+      this.execFastComparisons = this.execFastComparisons.bind(this);
       this.getGalleryFilenames = this.getGalleryFilenames.bind(this);
       this.sortComparisonResult = this.sortComparisonResult.bind(this);
       this.cleanResults = this.cleanResults.bind(this);
@@ -60,18 +62,44 @@ class RankedResult extends React.Component {
       
     }
   }
-  registerResultPic = (comparisonResultPic, comparisonScore, comparisonImgBase64) =>{
+  onClickHandlerFast = (uploadedFilename)=>{  
+      this.cleanResults();
+      this.execFastComparisons(uploadedFilename, this.state.gallery);
+  }
+  registerResultPic = (comparisonResultPicPath, comparisonScore, comparisonImgBase64) =>{
     console.log("In registerResultPic")
     this.setState({
       comparisonResultList:[
         ...this.state.comparisonResultList,
         {
-          pic: comparisonResultPic,
+          picPath: comparisonResultPicPath,
           score: comparisonScore,
           pic_base64: comparisonImgBase64
         }
       ]
     })
+  }
+  execFastComparisons = (uploadedFilename, galleryFilenames)=>{
+    if (uploadedFilename.length > 0){
+      let payload = {
+        filesToCompare: galleryFilenames.map((item)=> item.filename),
+        uploadedFilename: uploadedFilename
+      }
+      axios.post('/comparison', payload)
+      .then(response => {
+        var sortedTargets = response.data;
+        sortedTargets = sortedTargets.sort((a, b) => 
+          parseFloat(b.score) - parseFloat(a.score));
+        sortedTargets.map((item) => 
+          this.execComparison(uploadedFilename, item.filename)
+        )
+        return sortedTargets;
+      })
+      .catch(function (error) {
+        console.log(error);
+      })
+      .finally(); 
+    }
   }
   execComparison = (uploadedFilename, galleryFilename)=>{
     // axios.get('http://localhost:8000/comparison', {
@@ -83,10 +111,10 @@ class RankedResult extends React.Component {
     })
     .then(response => {
       console.log(response);
-      let comparisonResultPic = response.data[0];
+      let comparisonResultPicPath = response.data[0];
       let comparisonScore =  response.data[1];
       let comparisonImgBase64 =  response.data[2];
-      this.registerResultPic(comparisonResultPic, comparisonScore, comparisonImgBase64);
+      this.registerResultPic(comparisonResultPicPath, comparisonScore, comparisonImgBase64);
       return comparisonScore
       
     })
@@ -131,7 +159,7 @@ class RankedResult extends React.Component {
   getResultComponent = (item) => {
     return(
     <div>
-      {/* <img src={"/results/" + item.pic} className="App-logo img-fluid" alt="no result yet" /> */}
+      {/* <img src={"/results/" + item.picPath} className="App-logo img-fluid" alt="no result yet" /> */}
       <img src={`data:image/jpg;base64,${item.pic_base64}`} className="App-logo img-fluid" alt="no result yet" />
       <p>{(item.score> 0.24 ? "The same person!" : "Not similar!") + ", xCos score: " + item.score}</p>
     </div>)
@@ -141,6 +169,10 @@ class RankedResult extends React.Component {
                         onClick={()=>this.onClickHandler(this.props.uploadedFilename)}>
                       Compare
                       </button>
+    var compareBtnFast = <button type="button" className="btn btn-primary mt-3" 
+                            onClick={()=>this.onClickHandlerFast(this.props.uploadedFilename)}>
+                         Compare!
+                         </button>
     var displayedUploadedFilename = this.props.uploadedFilename.length > 0 ? this.props.uploadedFilename : "----";
     var displayedGalleryFilenames = this.state.gallery.length > 0 ? this.state.gallery.map(item=>item.filename) : "----";
     var progressText = this.state.progressTextList.map((text)=><p>{">>> " + text + "..."}</p>);
@@ -149,8 +181,9 @@ class RankedResult extends React.Component {
       <div>
         <div className="row mt-3">
           <div className="col">
-            <p className="h6">Comparing {displayedUploadedFilename} and {displayedGalleryFilenames}</p>
-            {compareBtn}
+            <p className="h6">Comparing {displayedUploadedFilename} and {displayedGalleryFilenames[0]}...</p>
+            {/* {compareBtn} */}
+            {compareBtnFast}
             {progressText}
           </div>
         </div>

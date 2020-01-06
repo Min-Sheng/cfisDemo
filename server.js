@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var multer = require('multer')
 var cors = require('cors');
+var bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
@@ -25,6 +26,7 @@ var databaseDir = path.join(__dirname,'public/');
 app.use(express.static(databaseDir));
 app.use(express.static(path.join(__dirname, 'build')));
 app.use(cors())
+app.use(bodyParser.json());
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -54,6 +56,33 @@ app.post('/upload',function(req, res) {
 
     })
 });
+// Handle the fast comparisons
+app.post('/comparison',function(req, res) {
+  console.log(">>>>> In fast comparison");
+  let reqJson = req.body; 
+  let uploadedFilename = reqJson.uploadedFilename;
+  let filesToCompare = reqJson.filesToCompare;
+  console.log(uploadedFilename);
+  console.log(filesToCompare);
+  filesToCompare = filesToCompare.map((filename)=>
+    path.join(databaseDir, "database", filename));
+  uploadedFilename = path.join(databaseDir, "uploaded_imgs", uploadedFilename);
+
+  axios.post('http://localhost:5901', {
+    params: {
+      uploadedFilename: uploadedFilename,
+      filesToCompare: filesToCompare,
+    }
+  })
+  .then(response => {
+    let file2scores = response.data;
+    res.send(file2scores);
+  })
+  .catch(error => {
+    console.log(error);
+    console.log('EEEEEEEEEEEEEEEEEE');
+  });
+});
 app.get('/image_list',function(req, res) {
     console.log(databaseDir);
     var filenames = fs.readdirSync(path.join(databaseDir, "database"));
@@ -79,7 +108,7 @@ app.get('/comparison',function(req, res) {
     }
   })
   .then(response => {
-    result_file_base64_string = response.data.result_base64
+    let result_file_base64_string = response.data.result_base64
     
     // Get the score text
     var score_file = result_file.replace(/\.[^/.]+$/, "") + ".txt"
