@@ -30,34 +30,116 @@ app.use(bodyParser.json());
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploaded_imgs')
+    cb(null, 'public/uploaded_imgs');
   },
   filename: function (req, file, cb) {
     // cb(null, Date.now() + '-' +file.originalname )
-    cb(null, file.originalname )
+    cb(null, file.originalname);
   }
 })
 
-var upload = multer({ storage: storage }).single('file');
+var upload = multer({
+              storage: storage,
+              fileFilter: function (req, file, cb) {
+                checkFileType(file, cb);
+              }
+            }).array('file', 25);
+
+// Check File Type
+function checkFileType(file, cb) {
+  // Allowed ext
+  const filetypes = /jpeg|jpg|png|gif/;
+  // Check ext
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  // Check mime
+  const mimetype = filetypes.test(file.mimetype);
+  if (mimetype && extname) {
+      return cb(null, true);
+  } else {
+      cb('Error: Images Only!');
+  }
+}
 
 app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-app.post('/upload',function(req, res) {
+app.post('/upload', function(req, res) {
      
     upload(req, res, function (err) {
-           if (err instanceof multer.MulterError) {
-               return res.status(500).json(err)
-           } else if (err) {
-               return res.status(500).json(err)
-           }
-      return res.status(200).send(req.file)
-
+      if (err instanceof multer.MulterError) {
+        res.status(500).json(err);
+      } else if (err) {
+        res.status(500).json(err);
+      }
+      //console.log(req.files[0]);
+      
+      var groupName = path.parse(req.files[0].originalname).name;
+      var mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
+      function mkdirpath(mkdirsync) {
+        if (!fs.existsSync(mkdirsync)) {
+            try {
+                fs.mkdirSync(mkdirsync);
+            }
+            catch (e) {
+                mkdirpath(path.dirname(mkdirsync));
+                mkdirpath(mkdirsync);
+            }
+          }
+        }
+      mkdirpath(mkdirsync);
+      var sourceFile, destFile;
+      for (let i = 0; i < req.files.length; i++) {
+        sourceFile = './public/uploaded_imgs/' + req.files[i].originalname;
+        destFile = mkdirsync + req.files[i].originalname;
+        fs.rename(sourceFile, destFile, function (err) {
+            if (err) console.log(`ERROR: ${err}`);
+        });
+        console.log(req.files[i]);
+      }
+      res.send("All files are uploaded");
     })
+    /*upload(req, res, function (err) {
+          if (err instanceof multer.MulterError) {
+              res.status(500).json(err);
+          } else if (err) {
+              res.status(500).json(err);
+          } else {
+            // Create folder path
+            console.log(req.file);
+            var groupName = path.parse(req.file.originalname).name;
+            var mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
+            function mkdirpath(mkdirsync) {
+              if (!fs.existsSync(mkdirsync)) {
+                  try {
+                      fs.mkdirSync(mkdirsync);
+                  }
+                  catch (e) {
+                      mkdirpath(path.dirname(mkdirsync));
+                      mkdirpath(mkdirsync);
+                  }
+                }
+              }
+            mkdirpath(mkdirsync);
+            var sourceFile = './public/uploaded_imgs/' + req.file.originalname;
+            var destFile = mkdirsync + req.file.originalname;
+            fs.rename(sourceFile, destFile, function (err) {
+                if (err) console.log(`ERROR: ${err}`);
+            });
+            //console.log(req.file);
+            res.status(200).send(req.file);
+          }
+    })*/
+});
+app.get('/inference',function(req, res) {
+  var selectedFilename = req.query.selectedFilename;
+  var fileFromDB = req.query.fileFromDB;
+  console.log(selectedFilename);
+  console.log(fileFromDB);
+  res.send("The file infomations are received.");
 });
 // Handle the fast comparisons
-app.post('/comparison',function(req, res) {
+/*app.post('/comparison',function(req, res) {
   console.log(">>>>> In fast comparison");
   let reqJson = req.body; 
   let uploadedFilename = reqJson.uploadedFilename;
@@ -82,13 +164,13 @@ app.post('/comparison',function(req, res) {
     console.log(error);
     console.log('EEEEEEEEEEEEEEEEEE');
   });
-});
+});*/
 app.get('/image_list',function(req, res) {
     console.log(databaseDir);
     var filenames = fs.readdirSync(path.join(databaseDir, "database"));
     res.send(filenames);
 });
-app.get('/comparison',function(req, res) {
+/*app.get('/comparison',function(req, res) {
   var uploadedFilename = req.query.uploadedFilename;
   var galleryFilename = req.query.galleryFilename;
   console.log(uploadedFilename);
@@ -139,7 +221,7 @@ app.get('/comparison',function(req, res) {
   
   // let stdout = execSync("bash compare.sh " + uploadedFilename + " " + galleryFilename + " " + result_file, {stdio: 'inherit'} )
  
-});
+});*/
 
 app.listen(8000, function() {
 

@@ -9,46 +9,43 @@ class GalleryItem extends React.Component {
       this.onClickHandler = this.onClickHandler.bind(this);
   }
 
-  onClickHandler = (filename)=>{
+  onClickHandler = (filename) => {
     this.props.chooseByFileName(filename);
   }
   render() {
-      return (
-        <div class={"card hovereffect col-lg-2 col-md-2 col-6 "+ (this.props.item.active ? "chosen": "")}>
-          {/* <a href="#" class="d-block mt-2 mb-2 h-100"> */}
-                {/* <img class="img-fluid img-thumbnail" 
-                    src={"http://localhost:8000/database/" + this.props.item.filename} alt="img not found"/> */}
-                <img class="img-fluid img-thumbnail" 
-                    src={"/database/" + this.props.item.filename} alt="img not found"/>
-                <div class="overlay">
-                  <h4>{this.props.item.filename}</h4>
-                  {/* <a class="info" href="#">Choose</a> */}
-                  <button type="button" className="btn info mt-3" 
-                          onClick={()=>this.onClickHandler(this.props.item.filename)}>
-                  {this.props.item.active ? "Unchoose": "Choose"}
-                  </button>
-                </div>
-          {/* </a> */}
-        </div>
-          // <div 
-          //     className={this.state.active ? 'your_className': null} 
-          //     onClick={this.toggleClass} 
-          // >
-          //     <p>{this.props.text}</p>
-          // </div>
-      )
-}
+    if (!this.props.fileFromDB) this.props.item.active = false;
+    return (
+      <div className={"card hovereffect col-lg-3 col-md-3 col-6 "+ (this.props.item.active ? "chosen": "")}>
+              <img className="img-fluid img-thumbnail" 
+                  src={"/database/" + this.props.item.filename} alt="img not found"/>
+              <div className="overlay">
+                <h4>{this.props.item.filename}</h4>
+                <button type="button" className="btn info mt-3" 
+                        onClick={()=>this.onClickHandler(this.props.item.filename)}>
+                {this.props.item.active ? "Unchoose": "Choose"}
+                </button>
+              </div>
+      </div>
+    )
+  }
 }
 class Gallery extends React.Component  {
+  _isMounted = false;
+
   constructor(props) {
     super(props);
     this.state = { 
       gallery : [],
     };
+    this.chooseByFileName = this.chooseByFileName.bind(this);
+  }
+
+  componentDidMount() {
+    this._isMounted = true;
     // axios.get('http://localhost:8000/image_list', {})
     axios.get('/image_list', {})
     .then(response => {
-      console.log(response);
+      // console.log(response);
       this.setState({
         gallery : response.data.map((name)=>({
             filename: name,
@@ -61,19 +58,26 @@ class Gallery extends React.Component  {
     })
     .finally(function () {
       // always executed
-    });  
-    this.chooseByFileName = this.chooseByFileName.bind(this);
-    // this.onClickHandler = this.onClickHandler.bind(this);
+    });
   }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
   chooseByFileName = (filename) =>{
-    let gallery = this.state.gallery
+    const gallery = this.state.gallery;
     for(let i = 0; i < gallery.length; i++){
       if (filename === gallery[i].filename){
         gallery[i].active = !gallery[i].active;
         if (gallery[i].active){
-          this.props.setGalleryToCompare(filename);
+          this.props.setSelectedFile("/database/" + filename, true);
+          this.props.setCroppedFile(null);
+          this.props.setLoaded(0);
         }else{
-          this.props.setGalleryToCompare("");
+          this.props.setSelectedFile(null, false);
+          this.props.setCroppedFile(null);
+          this.props.setLoaded(0);
         }
       }else{
         gallery[i].active = false;
@@ -84,11 +88,10 @@ class Gallery extends React.Component  {
     });
   }
   render(){
-    const items = this.state.gallery.map((item) => <GalleryItem item={item} chooseByFileName={this.chooseByFileName}/>);
+    const items = this.state.gallery.map((item) => <GalleryItem key={item.filename} item={item} chooseByFileName={this.chooseByFileName} fileFromDB={this.props.fileFromDB}/>);
     return (
       <div>
-        <div class="row text-center text-lg-left">
-
+        <div className="row text-center text-lg-left mt-3">
           {items}
         </div>
       </div>

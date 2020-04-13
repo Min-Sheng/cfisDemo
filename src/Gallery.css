@@ -1,20 +1,4 @@
-.image-container {
-    vertical-align: middle;
-    display: inline-block;
-    width: 50%;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .main {
-    text-align: center;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-  }
-
-  .chosen{
-    opacity:1;
-    background: turquoise;
-  }
+.chosen{
+  opacity:1;
+  background: turquoise;
+}
