@@ -1,15 +1,15 @@
-var express = require('express');
-var app = express();
-var multer = require('multer')
-var cors = require('cors');
-var bodyParser = require('body-parser');
+const express = require('express');
+const app = express();
+const multer = require('multer')
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 
 
 const { execSync } = require('child_process');
-var databaseDir = path.join(__dirname,'public/');
+const databaseDir = path.join(__dirname,'public/');
 // fs.readdir(databaseDir, function (err, files) {
 //     //handling error
 //     if (err) {
@@ -28,7 +28,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.use(cors())
 app.use(bodyParser.json());
 
-var storage = multer.diskStorage({
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/uploaded_imgs');
   },
@@ -38,8 +38,11 @@ var storage = multer.diskStorage({
   }
 })
 
-var upload = multer({
+const upload = multer({
               storage: storage,
+              limits:{
+                fileSize:1024*1024*100,
+              },
               fileFilter: function (req, file, cb) {
                 checkFileType(file, cb);
               }
@@ -67,37 +70,38 @@ app.get('/', function(req, res) {
 app.post('/upload', function(req, res) {
      
     upload(req, res, function (err) {
-      if (err instanceof multer.MulterError) {
+      if (err) {
         res.status(500).json(err);
-      } else if (err) {
-        res.status(500).json(err);
-      }
-      //console.log(req.files[0]);
-      
-      var groupName = path.parse(req.files[0].originalname).name;
-      var mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
-      function mkdirpath(mkdirsync) {
-        if (!fs.existsSync(mkdirsync)) {
-            try {
-                fs.mkdirSync(mkdirsync);
-            }
-            catch (e) {
-                mkdirpath(path.dirname(mkdirsync));
-                mkdirpath(mkdirsync);
+        console.log("Please upload the file smaller than 100M");
+      } else {
+        //console.log(req.files[0]);
+        const filename = path.parse(req.files[0].originalname).name;
+        const groupName = (filename.slice(filename.length - 3) === "-q0") ? filename.slice(0, filename.length - 3): filename;
+        console.log(groupName);
+        const mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
+        function mkdirpath(mkdirsync) {
+          if (!fs.existsSync(mkdirsync)) {
+              try {
+                  fs.mkdirSync(mkdirsync);
+              }
+              catch (e) {
+                  mkdirpath(path.dirname(mkdirsync));
+                  mkdirpath(mkdirsync);
+              }
             }
           }
+        mkdirpath(mkdirsync);
+        let sourceFile, destFile;
+        for (let i = 0; i < req.files.length; i++) {
+          sourceFile = './public/uploaded_imgs/' + req.files[i].originalname;
+          destFile = mkdirsync + req.files[i].originalname;
+          fs.rename(sourceFile, destFile, function (err) {
+              if (err) console.log(`ERROR: ${err}`);
+          });
+          //console.log(req.files[i]);
         }
-      mkdirpath(mkdirsync);
-      var sourceFile, destFile;
-      for (let i = 0; i < req.files.length; i++) {
-        sourceFile = './public/uploaded_imgs/' + req.files[i].originalname;
-        destFile = mkdirsync + req.files[i].originalname;
-        fs.rename(sourceFile, destFile, function (err) {
-            if (err) console.log(`ERROR: ${err}`);
-        });
-        console.log(req.files[i]);
-      }
-      res.send("All files are uploaded");
+        res.send("All files are uploaded");
+        }
     })
     /*upload(req, res, function (err) {
           if (err instanceof multer.MulterError) {
@@ -107,8 +111,8 @@ app.post('/upload', function(req, res) {
           } else {
             // Create folder path
             console.log(req.file);
-            var groupName = path.parse(req.file.originalname).name;
-            var mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
+            const groupName = path.parse(req.file.originalname).name;
+            const mkdirsync = 'public/uploaded_imgs/' + groupName + '/';
             function mkdirpath(mkdirsync) {
               if (!fs.existsSync(mkdirsync)) {
                   try {
@@ -121,8 +125,8 @@ app.post('/upload', function(req, res) {
                 }
               }
             mkdirpath(mkdirsync);
-            var sourceFile = './public/uploaded_imgs/' + req.file.originalname;
-            var destFile = mkdirsync + req.file.originalname;
+            ley sourceFile = './public/uploaded_imgs/' + req.file.originalname;
+            let destFile = mkdirsync + req.file.originalname;
             fs.rename(sourceFile, destFile, function (err) {
                 if (err) console.log(`ERROR: ${err}`);
             });
@@ -131,19 +135,65 @@ app.post('/upload', function(req, res) {
           }
     })*/
 });
-app.get('/inference',function(req, res) {
-  var selectedFilename = req.query.selectedFilename;
-  var fileFromDB = req.query.fileFromDB;
-  console.log(selectedFilename);
+/*app.get('/inference',function(req, res) {
+  const uploadedFilename = req.query.uploadedFilename;
+  const fileFromDB = req.query.fileFromDB;
+  const croppedFileNumber = req.query.croppedFileNumber;
+
+  console.log(uploadedFilename);
   console.log(fileFromDB);
-  res.send("The file infomations are received.");
+  console.log(croppedFileNumber);
+  res.send("The information of files is received.");
+
+  axios.post('http://localhost:5901', {
+    params: {
+      uploadedFilename: uploadedFilename,
+      fileFromDB: fileFromDB,
+      croppedFileNumber: croppedFileNumber,
+    }
+  })
+  .then(response => {
+    const result = response.data;
+    console.log(result);
+  })
+  .catch(error => {
+    console.log(error);
+    console.log('EEEEEEEEEEEEEEEEEE');
+  });
+});*/
+app.post('/inference', function(req, res) {
+  const reqJson = req.body;
+  const uploadedFilename = reqJson.uploadedFilename;
+  const fileFromDB = reqJson.fileFromDB;
+  const croppedFileNumber = reqJson.croppedFileNumber;
+  
+  //console.log(uploadedFilename);
+  //console.log(fileFromDB);
+  //console.log(croppedFileNumber);
+  //res.send("The information of files is received.");
+
+  axios.post('http://localhost:5901', {
+    params: {
+      uploadedFilename: uploadedFilename,
+      fileFromDB: fileFromDB,
+      croppedFileNumber: croppedFileNumber,
+    }
+  })
+  .then(response => {
+    const result_file_base64_string = response.data.result_base64;
+    res.send(result_file_base64_string);
+  })
+  .catch(error => {
+    console.log(error);
+    console.log('EEEEEEEEEEEEEEEEEE');
+  });
 });
 // Handle the fast comparisons
 /*app.post('/comparison',function(req, res) {
   console.log(">>>>> In fast comparison");
-  let reqJson = req.body; 
-  let uploadedFilename = reqJson.uploadedFilename;
-  let filesToCompare = reqJson.filesToCompare;
+  const reqJson = req.body; 
+  const uploadedFilename = reqJson.uploadedFilename;
+  const filesToCompare = reqJson.filesToCompare;
   console.log(uploadedFilename);
   console.log(filesToCompare);
   filesToCompare = filesToCompare.map((filename)=>
@@ -157,7 +207,7 @@ app.get('/inference',function(req, res) {
     }
   })
   .then(response => {
-    let file2scores = response.data;
+    const file2scores = response.data;
     res.send(file2scores);
   })
   .catch(error => {
@@ -167,15 +217,15 @@ app.get('/inference',function(req, res) {
 });*/
 app.get('/image_list',function(req, res) {
     console.log(databaseDir);
-    var filenames = fs.readdirSync(path.join(databaseDir, "database"));
+    const filenames = fs.readdirSync(path.join(databaseDir, "database"));
     res.send(filenames);
 });
 /*app.get('/comparison',function(req, res) {
-  var uploadedFilename = req.query.uploadedFilename;
-  var galleryFilename = req.query.galleryFilename;
+  const uploadedFilename = req.query.uploadedFilename;
+  const galleryFilename = req.query.galleryFilename;
   console.log(uploadedFilename);
   console.log(galleryFilename);
-  var result_file = uploadedFilename.split('.').slice(0, -1).join('.') +"_" + galleryFilename;
+  const result_file = uploadedFilename.split('.').slice(0, -1).join('.') +"_" + galleryFilename;
   console.log(result_file)
   galleryFilename = path.join(databaseDir, "database", galleryFilename);
   uploadedFilename = path.join(databaseDir, "uploaded_imgs", uploadedFilename);
@@ -190,15 +240,15 @@ app.get('/image_list',function(req, res) {
     }
   })
   .then(response => {
-    let result_file_base64_string = response.data.result_base64
+    const result_file_base64_string = response.data.result_base64
     
     // Get the score text
-    var score_file = result_file.replace(/\.[^/.]+$/, "") + ".txt"
+    const score_file = result_file.replace(/\.[^/.]+$/, "") + ".txt"
     score_file = path.join(databaseDir, "results", score_file);
-    var lineReader = require('readline').createInterface({
+    const lineReader = require('readline').createInterface({
       input: require('fs').createReadStream(score_file),
     });
-    var lineCounter = 0; var wantedLines = [];
+    let lineCounter = 0; let wantedLines = [];
     lineReader.on('line', function (line) {
       lineCounter++;
       wantedLines.push(line);
@@ -207,7 +257,7 @@ app.get('/image_list',function(req, res) {
     lineReader.on('close', function() {
       console.log(wantedLines);
       // process.exit(0);
-      var score = wantedLines[0];
+      const score = wantedLines[0];
       res.send([result_file, score, result_file_base64_string]);
     });
   
@@ -219,7 +269,7 @@ app.get('/image_list',function(req, res) {
   // stderr is sent to stderr of parent process
   // you can set options.stdio if you want it to go elsewhere
   
-  // let stdout = execSync("bash compare.sh " + uploadedFilename + " " + galleryFilename + " " + result_file, {stdio: 'inherit'} )
+  // const stdout = execSync("bash compare.sh " + uploadedFilename + " " + galleryFilename + " " + result_file, {stdio: 'inherit'} )
  
 });*/
 
