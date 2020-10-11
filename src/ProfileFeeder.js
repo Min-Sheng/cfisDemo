@@ -1,6 +1,4 @@
 import React from 'react';
-//import axios from 'axios';
-//import {Progress} from 'reactstrap';
 import bsCustomFileInput from 'bs-custom-file-input'
 import profile_template from './microscope.svg';
 
@@ -21,6 +19,8 @@ class ProfileFeeder extends React.Component  {
       this.props.setLoaded(0);
       this.props.setSelectedFile(event.target.files[0], false);
       this.props.setCroppedFile(null);
+      this.props.setResult(null);
+      this.props.setInferenceFlag(false);
     }
     // // console.log(event.target.files[0]);
     // this.setState({
@@ -66,8 +66,6 @@ class ProfileFeeder extends React.Component  {
             <label className="custom-file-label" htmlFor="inputGroupFile01">Choose file</label>
           </div>
         </div>
-        {/*<Progress max="100" color="success" value={this.state.loaded} className="mt-3">{Math.round(this.state.loaded,2) }%</Progress>
-        <button type="button" className="btn btn-success mt-3" onClick={this.onClickHandler}>Upload</button>*/}
       </div>
   }
 

@@ -4,6 +4,7 @@ import NavBar from './NavBar';
 import Gallery from './Gallery';
 import ProfileFeeder from './ProfileFeeder';
 import Annotator from './Annotator';
+import Result from './myResult';
 import './App.css';
 import './ProfileFeeder.css'
 import './Annotator.css'
@@ -17,11 +18,17 @@ class App extends React.Component {
       fileFromDB: false,
       loaded: 0,
       croppedFiles: [],
+      uploadedFilename: null,
+      resultPic: null,
+      inferenceFlag: false
     };
     this.setSelectedFile = this.setSelectedFile.bind(this);
     this.setCroppedFile = this.setCroppedFile.bind(this);
     this.setLoaded = this.setLoaded.bind(this);
     this.deleteCroppedFile = this.deleteCroppedFile.bind(this);
+    this.setUploadedFilename = this.setUploadedFilename.bind(this);
+    this.setResult = this.setResult.bind(this);
+    this.setInferenceFlag = this.setInferenceFlag.bind(this);
   }
   setLoaded = (loaded) => {
     this.setState({
@@ -53,6 +60,9 @@ class App extends React.Component {
       this.setState({
         croppedFiles:  [],
       });
+      this.setLoaded(0);
+      this.setResult(null);
+      this.setInferenceFlag(false);
     }
     else if (this.state.croppedFiles.length < max_size){
       let isDuplicate = false;
@@ -61,15 +71,19 @@ class App extends React.Component {
           isDuplicate = true;
           alert("Please crop a new RoI");
           return item;
-      } return (item !== file);});
-      if (isDuplicate) {
-        this.setState({
-          croppedFiles: croppedFiles,
+        } 
+        return (item !== file);});
+        if (isDuplicate) {
+          this.setState({
+            croppedFiles: croppedFiles,
+          });
+        }else{
+          this.setState({
+            croppedFiles: croppedFiles.concat([file]),
         });
-      }else{
-        this.setState({
-          croppedFiles: croppedFiles.concat([file]),
-        });
+        this.setLoaded(0);
+        this.setResult(null);
+        this.setInferenceFlag(false);
       }
     } else {
       alert("Reach max size "+ max_size + ".");
@@ -82,16 +96,23 @@ class App extends React.Component {
         });
     }
   }
-  setUploadedToSegment = (name) => {
+  setUploadedFilename = (name) => {
     this.setState({
       uploadedFilename : name
     });
   }
-  setGalleryToSegment = (name) => {
+  setResult = (file) => {
     this.setState({
-      galleryFilename : name
+      resultPic: file,
     });
   }
+
+  setInferenceFlag = (inferenceFlag) => {
+    this.setState({
+      inferenceFlag: inferenceFlag
+    });
+  }
+
   render(){
     return (
       <div className="App">
@@ -113,7 +134,9 @@ class App extends React.Component {
                                 setSelectedFile = {this.setSelectedFile} 
                                 setCroppedFile ={this.setCroppedFile} 
                                 displayPicture = {this.state.displayPicture} 
-                                fileFromDB = {this.state.fileFromDB}/>
+                                fileFromDB = {this.state.fileFromDB}
+                                setResult = {this.setResult} 
+                                setInferenceFlag = {this.setInferenceFlag} />
               </div>
               <div className="col-sm-1">
                 <h4 className="font-weight-light text-center text-lg-left mt-4 mb-0">or</h4>
@@ -127,7 +150,9 @@ class App extends React.Component {
                   <Gallery setLoaded = {this.setLoaded} 
                             setSelectedFile={this.setSelectedFile} 
                             setCroppedFile ={this.setCroppedFile} 
-                            fileFromDB = {this.state.fileFromDB}/>
+                            fileFromDB = {this.state.fileFromDB}
+                            setResult = {this.setResult} 
+                            setInferenceFlag = {this.setInferenceFlag} />
               </div>
             </div>
             <div className="row" >
@@ -141,11 +166,13 @@ class App extends React.Component {
                                 setCroppedFile={this.setCroppedFile} 
                                 deleteCroppedFile = {this.deleteCroppedFile}
                                 selectedFile = {this.state.selectedFile}
+                                setUploadedFilename = {this.setUploadedFilename}
                                 loaded = {this.state.loaded}
                                 displayPicture = {this.state.displayPicture} 
                                 fileFromDB = {this.state.fileFromDB} 
                                 croppedFiles={this.state.croppedFiles} 
-                                croppedNumber={this.state.croppedNumber}/>
+                                setResult = {this.setResult} 
+                                setInferenceFlag = {this.setInferenceFlag} />
                 <div className="row" >
                   <div className="col-sm-12">
                       <h3 className="font-weight-light text-center text-lg-left mt-4 mb-0">Result</h3>
@@ -153,6 +180,15 @@ class App extends React.Component {
                         <p style={{width:'380px'}}>The few-shot instance segmentation result.</p>
                       </div>
                       <hr className="mt-1 mb-1"/>
+                        <Result loaded = {this.state.loaded}
+                                uploadedFilename = {this.state.uploadedFilename}
+                                fileFromDB = {this.state.fileFromDB}
+                                croppedFiles = {this.state.croppedFiles} 
+                                displayPicture = {this.state.displayPicture} 
+                                resultPic = {this.state.resultPic}
+                                inferenceFlag = {this.state.inferenceFlag}
+                                setResult = {this.setResult} 
+                                setInferenceFlag = {this.setInferenceFlag}/>
                   </div>
                 </div>
               </div>

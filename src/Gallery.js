@@ -74,10 +74,14 @@ class Gallery extends React.Component  {
           this.props.setSelectedFile("/database/" + filename, true);
           this.props.setCroppedFile(null);
           this.props.setLoaded(0);
+          this.props.setResult(null);
+          this.props.setInferenceFlag(false);
         }else{
           this.props.setSelectedFile(null, false);
           this.props.setCroppedFile(null);
           this.props.setLoaded(0);
+          this.props.setResult(null);
+          this.props.setInferenceFlag(false);
         }
       }else{
         gallery[i].active = false;
