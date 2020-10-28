@@ -8,7 +8,7 @@ In the project, you can run:
 npm start
 ```
 
-,and
+, and
 
 ```bash
 node server.js
